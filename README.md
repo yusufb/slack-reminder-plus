@@ -2,8 +2,7 @@
 
 Reminder Plus is a simple self-hosted alternative to [Slack](http://slack.com)'s [reminders](https://slack.com/intl/en-tr/help/articles/208423427-Set-a-reminder) with customizable snooze times.
 
-Table of contents
-=================
+## Table of contents
 
   * [Installation](#installation)
     * [PHP](#php)
