@@ -100,3 +100,31 @@ define('VERIF_TOKEN', '<Verification Token> from step 2');
 ```
 * * * * * php /var/www/reminder-plus/cron.php > /dev/null
 ```
+
+
+## Usage
+
+After adding the bot to your workspace you can type `help` to find out the available commands.
+
+### Adding a new reminder
+
+Add your reminder with the following syntax:
+
+`"[reminder content]" [date format]`, e.g. `"My first reminder" dec 19 17:15`
+
+
+### Date formats
+
+* `dec 19` - _reminder at default hour_
+* `dec 19 12:15` - _reminder at specified hour_
+* `dec 19 21` - _reminder at the top of the specified hour (21:00)_
+* `16:30` - _reminder at the specified hour for today_
+* `16` - _reminder at the top of the specified hour for today_
+* `tomorrow` or `tm` - _reminder at default hour for tomorrow_
+* `tomorrow 14` or `tm 14` - _reminder at the top of the specified hour for tomorrow (14:00)_
+* `tomorrow 14:15` or `tm 14:15` - _reminder at the specified hour for tomorrow_
+* `mon` to `sun` - _reminder at the default hour in the next occurrence of the specified day_
+* `mon 14` - _reminder at the top of the specified hour in the next occurrence of the specified day (14:00)_
+* `mon 14:15` - _reminder at the specified hour in the next occurrence of the specified day_
+* `in 3h` or `in 30m` or `in 1h 30m` - _relative times to now_
+
