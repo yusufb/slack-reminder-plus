@@ -14,6 +14,8 @@ Table of contents
   * [Usage](#usage)
     * [Adding a new reminder](#adding-a-new-reminder)   
     * [Date formats](#date-formats)
+    * [Listing reminders](#listing-reminders)
+    * [Preferences](#preferences)
 
 ## Installation
 
@@ -136,10 +138,15 @@ Add your reminder with the following syntax:
 * `list` or `l` - list incomplete reminders
 * `list all` or `la` - list all reminders 
 
-### Preferences
+
+### Preferences
 
 * `pref hour [time]` - set yout default hour. e.g. `pref hour 09:30`
 This value will be used when you enter a date without a specified hour.
 
 * `pref snooze [time]` - set your snooze times. e.g. `pref snooze in 1h, 14:30, 17:30, tomorrow`
 This values will be used as preset values in snooze menu.
+
+![Snooze menu](tutorial/snooze_menu.png)
+
+* `pref list` - list your current preferences
