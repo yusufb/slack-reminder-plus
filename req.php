@@ -18,7 +18,8 @@ if($req->api_app_id !== APP_ID or $req->token !== VERIF_TOKEN) {
 	die('auth!');
 }
 
-$input = str_replace(['“', '”'], '"', $req->event->text);
+$inputRaw = str_replace(['“', '”'], '"', $req->event->text);
+$input = strtolower($inputRaw);
 
 if(!isset($req->event->bot_id) and $req->type !== 'block_actions' and $req->type !== 'view_submission') {
 
@@ -87,9 +88,9 @@ if(!isset($req->event->bot_id) and $req->type !== 'block_actions' and $req->type
 
 
 	# add new reminder
-	} elseif(preg_match('/^".*" .*$/i', $input)) {
+	} elseif(preg_match('/^".*" .*$/i', $inputRaw)) {
 
-		$parts = explode('"', $input);
+		$parts = explode('"', $inputRaw);
 		$last = array_pop($parts);
 		$parts = array(implode('"', $parts), $last);
 		$content = ltrim($parts[0], '"');
