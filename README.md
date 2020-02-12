@@ -11,6 +11,9 @@ Table of contents
     * [Creating a Slack App](#creating-a-slack-app)
     * [Config](#config)
     * [Cron](#cron)
+  * [Usage](#usage)
+    * [Adding a new reminder](#adding-a-new-reminder)   
+    * [Date formats](#date-formats)
 
 ## Installation
 
@@ -128,3 +131,15 @@ Add your reminder with the following syntax:
 * `mon 14:15` - _reminder at the specified hour in the next occurrence of the specified day_
 * `in 3h` or `in 30m` or `in 1h 30m` - _relative times to now_
 
+### Listing reminders
+
+* `list` or `l` - list incomplete reminders
+* `list all` or `la` - list all reminders 
+
+### Preferences
+
+* `pref hour [time]` - set yout default hour. e.g. `pref hour 09:30`
+This value will be used when you enter a date without a specified hour.
+
+* `pref snooze [time]` - set your snooze times. e.g. `pref snooze in 1h, 14:30, 17:30, tomorrow`
+This values will be used as preset values in snooze menu.
