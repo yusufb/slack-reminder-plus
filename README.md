@@ -141,9 +141,11 @@ Add your reminder with the following syntax:
 ### Preferences
 
 * `pref hour [time]` - set yout default hour. e.g. `pref hour 09:30`
+
 This value will be used when you enter a date without a specified hour.
 
 * `pref snooze [time]` - set your snooze times. e.g. `pref snooze in 1h, 14:30, 17:30, tomorrow`
+
 This values will be used as preset values in snooze menu.
 
 ![Snooze menu](tutorial/snooze_menu.png)
