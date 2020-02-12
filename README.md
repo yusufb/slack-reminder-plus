@@ -4,11 +4,16 @@ Reminder Plus is a simple self-hosted alternative to [Slack](http://slack.com)'s
 
 ## Installation
 
+### PHP
 
-### Cron
+* Place the `.php` files to a public directory.
+
+### Database
+
+* Create a MySQL database using [ddl.sql](ddl.sql) file:
 
 ```
-* * * * * php /var/www/reminder-plus/cron.php > /dev/null
+mysql -u yourusername -p yourpassword < ddl.sql
 ```
 
 ### Creating a Slack App
@@ -67,3 +72,21 @@ Reminder Plus is a simple self-hosted alternative to [Slack](http://slack.com)'s
 9. In `Subscribe to bot events` section add `message.im` as the Bot User Event.
 
 ![11](tutorial/11.png)
+
+### Config
+
+* Edit [constants.php](constants.php) file to set the values that you got while creating the Slack app:
+
+```
+define('AUTH_TOKEN', '<Bot User OAuth Access Token> from step 6');
+define('APP_ID', '<App ID> from step 2');
+define('VERIF_TOKEN', '<Verification Token> from step 2');
+```
+
+### Cron
+
+* Create a cron job to run [cron.php](cron.php) every minute:
+
+```
+* * * * * php /var/www/reminder-plus/cron.php > /dev/null
+```
