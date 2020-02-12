@@ -4,6 +4,13 @@ Reminder Plus is a simple self-hosted alternative to [Slack](http://slack.com)'s
 
 ## Installation
 
+
+### Cron
+
+```
+* * * * * php /var/www/reminder-plus/cron.php > /dev/null
+```
+
 ### Creating a Slack App
 
 1. Click `Create New App` at https://api.slack.com/apps.
