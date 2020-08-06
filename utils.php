@@ -16,7 +16,7 @@ function get_db() {
     return $db;
 }
 
-function curlReq($url, $data) {
+function curlReq($url, $data, $contentType='application/json; charset=utf-8') {
 
 	$url = SLACK_API_BASE_URL . $url;
 
@@ -26,16 +26,16 @@ function curlReq($url, $data) {
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);                                                                      
 	curl_setopt($ch, CURLOPT_HTTPHEADER, array(              
 		'Authorization: Bearer ' . AUTH_TOKEN,                                                            
-	    'Content-Type: application/json; charset=utf-8',                                                                                
+	    'Content-Type: ' . $contentType,
 	    'Content-Length: ' . strlen($data))                                                                       
 	);                                                                                                                   
 	                                                                                                                     
 	$result = curl_exec($ch);
 	curl_close($ch);
+	return $result;
 }
 
 function getSnoozeTimes($uid) {
-	//return array('in 1h', '14:30', '17:30', 'tomorrow');
 	$db = get_db();
 	$res = $db->prepare('select snooze_times from prefs where uid=? limit 1;');
 	$res->execute(array($uid));
