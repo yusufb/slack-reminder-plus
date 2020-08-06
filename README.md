@@ -11,7 +11,8 @@ Reminder Plus is a simple self-hosted alternative to [Slack](http://slack.com)'s
     * [Config](#config)
     * [Cron](#cron)
   * [Usage](#usage)
-    * [Adding a new reminder](#adding-a-new-reminder)   
+    * [Adding a new reminder](#adding-a-new-reminder)  
+    * [Message reminders](#message-reminders) 
     * [Date formats](#date-formats)
     * [Listing reminders](#listing-reminders)
     * [Preferences](#preferences)
@@ -116,6 +117,12 @@ Add your reminder with the following syntax:
 
 `"[reminder content]" [date format]`, e.g. `"My first reminder" dec 19 17:15`
 
+### Message reminders
+
+You can also add a reminder for a specific Slack message by clicking `More actions` button of the message.
+
+![Message reminders](tutorial/13.png)
+![Message reminders](tutorial/12.png)
 
 ### Date formats
 
