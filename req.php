@@ -14,14 +14,17 @@ if($req->type === 'url_verification' and $req->token === VERIF_TOKEN) {
 	die($req->challenge);
 }
 
-if($req->api_app_id !== APP_ID or $req->token !== VERIF_TOKEN) {
+if(/*$req->api_app_id !== APP_ID or*/ $req->token !== VERIF_TOKEN) {
 	die('auth!');
 }
+
+//logx($req);
 
 $inputRaw = str_replace(['“', '”'], '"', $req->event->text);
 $input = strtolower($inputRaw);
 
-if(!isset($req->event->bot_id) and $req->type !== 'block_actions' and $req->type !== 'view_submission') {
+
+if(!isset($req->event->bot_id) and $req->type !== 'block_actions' and $req->type !== 'view_submission' and $req->type !== 'message_action') {
 
 	# list reminders
 	if($input === 'l' or $input === 'list' or $input === 'la' or $input === 'list all' or $input === 'listall') {
@@ -90,33 +93,7 @@ if(!isset($req->event->bot_id) and $req->type !== 'block_actions' and $req->type
 	# add new reminder
 	} elseif(preg_match('/^".*" .*$/i', $inputRaw)) {
 
-		$parts = explode('"', $inputRaw);
-		$last = array_pop($parts);
-		$parts = array(implode('"', $parts), $last);
-		$content = ltrim($parts[0], '"');
-
-		$reminderTime = convTime(trim($parts[1]), getDefaultHour($req->event->user));
-
-		if($reminderTime !== FALSE) {
-	        $db = get_db();
-	        $insertQuery = $db->prepare('SET @v1 := (select 1+ifnull(max(id_user),0) from reminders where uid=?); insert into reminders(id_user, uid, cid, content, alarm_time) values(@v1, ?, ?, ?, ?);');
-
-	        if ($insertQuery->execute(array($req->event->user, $req->event->user, $req->event->channel, $content, $reminderTime))) {
-	            $responseText = ':white_check_mark: done! added the reminder at ' . date('H:i D, j M Y ', strtotime($reminderTime)) . '. type `list` or `l` for your upcoming reminders.';
-	        } else {
-	            $responseText = ':x: an error occured! please try again some time...';
-	        }
-		} else {
-			$responseText = ':x: invalid date! type `help` for date formats.';
-		}
-
-		$data = json_encode([
-	    	"channel" => $req->event->channel,
-	    	"text" => $responseText
-	    ]);
-
-		curlReq('chat.postMessage', $data);
-
+		addNewReminder($inputRaw);
 
 		#help menu
 	} else if($input === 'help') {
@@ -247,6 +224,15 @@ if(!isset($req->event->bot_id) and $req->type !== 'block_actions' and $req->type
 		curlReq('chat.postMessage', $data);
 	}
 
+} else if($req->type === 'message_action' and $req->callback_id === 'msg_reminder') {
+
+	$msgData = array($req->user->id, $req->message_ts, $req->channel->id);
+
+	#message reminder modal
+	$modalData = '{ "trigger_id": "'.$req->trigger_id.'", "view": { "type": "modal", "title": { "type": "plain_text", "text": "Message reminder", "emoji": true }, "submit": { "type": "plain_text", "text": "Submit", "emoji": true }, "close": { "type": "plain_text", "text": "Cancel", "emoji": true }, "callback_id": "remindmsg_'.implode('_', $msgData).'", "blocks": [ { "type": "section", "text": { "type": "plain_text", "text": "Add a reminder about this message.", "emoji": true } }, { "type": "divider" }, { "type": "input", "label": { "type": "plain_text", "text": "Reminder time: (default: tomorrow)", "emoji": false }, "element": { "type": "plain_text_input", "multiline": false }, "optional": true }, { "type": "input", "label": { "type": "plain_text", "text": "Reminder message", "emoji": true }, "element": { "type": "plain_text_input", "multiline": false }, "optional": true } ] } }';
+
+	curlReq('views.open', $modalData);
+
 } else {
 
 	# delete reminder
@@ -375,6 +361,55 @@ if(!isset($req->event->bot_id) and $req->type !== 'block_actions' and $req->type
 
 		snoozeReminder($updateId, $req->user->id, $cid, $d->value);
 
+
+		#remind message
+	} else if(strpos($req->view->callback_id, 'remindmsg_') === 0) {
+
+		$input = explode('_', $req->view->callback_id);
+		$user = $input[1];
+		$ts = $input[2];
+		$channel = $input[3];
+
+		$data = http_build_query([
+	    	"channel" => $channel,
+	    	"message_ts" => $ts
+	    ]);
+		$r = curlReq('chat.getPermalink', $data, 'application/x-www-form-urlencoded');
+		$url = json_decode($r);
+		$url = stripslashes($url->permalink);
+
+		$db = get_db();
+		$res = $db->prepare('select cid from reminders where uid=? order by id desc limit 1');
+		$res->execute(array($user));
+		$res->setFetchMode(PDO::FETCH_OBJ);
+		$s = $res->fetch();
+		$userChannel = $s->cid;
+
+/*
+		$data = http_build_query([
+	    	"types" => 'im',
+	    	"limit" => "1",
+	    	"user" => $user
+	    ]);
+
+		$resp = curlReq('users.conversations', $data, 'application/x-www-form-urlencoded');
+		$resp = json_decode($resp);
+		
+		$userChannel = $resp->channels[0]->id;
+*/
+
+
+		$d = (array) $req->view->state->values;
+		$customTime = (array) $d[array_keys($d)[0]];
+		$customTime = $customTime[array_keys($customTime)[0]]->value;
+		$label = (array) $d[array_keys($d)[1]];
+		$label = $label[array_keys($label)[0]]->value;
+
+		if(!$label) $label = 'this message';
+		if(!$customTime) $customTime = 'tomorrow';
+
+		addNewReminder('"<' . $url . '|'. $label . '>" ' . $customTime, $userChannel, $user);
+
 	}
 
 }
@@ -414,6 +449,40 @@ function snoozeReminder($updateId, $uid, $cid, $updateTime) {
 
 }
 
+function addNewReminder($inputRaw, $channel=null, $user=null) {
+
+	global $req;
+
+	$parts = explode('"', $inputRaw);
+	$last = array_pop($parts);
+	$parts = array(implode('"', $parts), $last);
+	$content = ltrim($parts[0], '"');
+
+	if(!$channel) $channel = $req->event->channel;
+	if(!$user) $user = $req->event->user;
+
+	$reminderTime = convTime(trim($parts[1]), getDefaultHour($user));
+
+	if($reminderTime !== FALSE) {
+        $db = get_db();
+        $insertQuery = $db->prepare('SET @v1 := (select 1+ifnull(max(id_user),0) from reminders where uid=?); insert into reminders(id_user, uid, cid, content, alarm_time) values(@v1, ?, ?, ?, ?);');
+
+        if ($insertQuery->execute(array($user, $user, $channel, $content, $reminderTime))) {
+            $responseText = ':white_check_mark: done! added the reminder at ' . date('H:i D, j M Y ', strtotime($reminderTime)) . '. type `list` or `l` for your upcoming reminders.';
+        } else {
+            $responseText = ':x: an error occured! please try again some time...';
+        }
+	} else {
+		$responseText = ':x: invalid date! type `help` for date formats.';
+	}
+
+	$data = json_encode([
+    	"channel" => $channel,
+    	"text" => $responseText
+    ]);
+
+	curlReq('chat.postMessage', $data);
+}
 
 function getHelpMenuContent() {
 	return '{ "blocks": [ { "type": "divider" }, { "type": "section", "text": { "type": "mrkdwn", "text": ":calendar:   *'.APP_NAME.'*" } }, { "type": "section", "text": { "type": "mrkdwn", "text": "`list` or `l` for listing incomplete reminders\n\n`list all` or `la` for listing all reminders\n\n" } }, { "type": "divider" }, { "type": "section", "text": { "type": "mrkdwn", "text": "`prefs` for setting preferences\n\n" } }, { "type": "divider" }, { "type": "section", "text": { "type": "mrkdwn", "text": "Add your reminder with the following syntax:\n\n`\"My new reminder\" dec 19 17:15`\n\n" } }, { "type": "section", "text": { "type": "mrkdwn", "text": "\n\n\n" } }, { "type": "divider" }, { "type": "section", "text": { "type": "mrkdwn", "text": "\n\n\n" } }, { "type": "section", "text": { "type": "mrkdwn", "text": ":information_source:   *Date formats*" } }, { "type": "section", "text": { "type": "mrkdwn", "text": "\n\n\n" } }, { "type": "section", "text": { "type": "mrkdwn", "text": "`dec 19` - _reminder at default hour_" } }, { "type": "section", "text": { "type": "mrkdwn", "text": "`dec 19 12:15` - _reminder at specified hour_" } }, { "type": "section", "text": { "type": "mrkdwn", "text": "`dec 19 21` - _reminder at the top of the specified hour (21:00)_" } }, { "type": "section", "text": { "type": "mrkdwn", "text": "`16:30` - _reminder at the specified hour for today_" } }, { "type": "section", "text": { "type": "mrkdwn", "text": "`16` - _reminder at the top of the specified hour for today_" } }, { "type": "section", "text": { "type": "mrkdwn", "text": "`tomorrow` or `tm` - _reminder at default hour for tomorrow_" } }, { "type": "section", "text": { "type": "mrkdwn", "text": "`tomorrow 14` or `tm 14` - _reminder at the top of the specified hour for tomorrow (14:00)_" } }, { "type": "section", "text": { "type": "mrkdwn", "text": "`tomorrow 14:15` or `tm 14:15` - _reminder at the specified hour for tomorrow_" } }, { "type": "section", "text": { "type": "mrkdwn", "text": "`mon` to `sun` - _reminder at the default hour in the next occurrence of the specified day_" } }, { "type": "section", "text": { "type": "mrkdwn", "text": "`mon 14` - _reminder at the top of the specified hour in the next occurrence of the specified day (14:00)_" } }, { "type": "section", "text": { "type": "mrkdwn", "text": "`mon 14:15` - _reminder at the specified hour in the next occurrence of the specified day_" } }, { "type": "section", "text": { "type": "mrkdwn", "text": "`in 3h` or `in 30m` or `in 1h 30m` - _relative times to now_" } } ] }';
