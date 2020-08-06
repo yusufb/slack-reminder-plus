@@ -108,6 +108,14 @@ define('VERIF_TOKEN', '<Verification Token> from step 2');
 ```
 
 
+***
+
+![logo](tutorial/logo.png)
+
+
+***
+
+
 ## Usage
 
 After adding the bot to your workspace you can type `help` to find out the available commands.
