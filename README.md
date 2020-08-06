@@ -53,7 +53,7 @@ mysql -u yourusername -p yourpassword < ddl.sql
 
 ---
 
-4. In `OAuth & Permissions` tab, navigate to `Scopes` section. Add `chat:write` and `im:history` as OAuth Scopes.
+4. In `OAuth & Permissions` tab, navigate to `Scopes` section. Add `chat:write`, `commands`, `im:history` and `im:read` as OAuth Scopes.
 
 ![5](tutorial/05.png)
 
